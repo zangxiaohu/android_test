@@ -90,6 +90,7 @@ public class WifiService extends Service {
 					break;
 				case CAN_NETWORK:
 					processCanNetwork(it);
+					break;
 				case START_BROW:
 					processStartBrow(it,msg.obj.toString());
 					break;
@@ -144,7 +145,6 @@ public class WifiService extends Service {
 	{
 		it.putExtra("wifiservice","scanwifi");
 		it.putExtra("tag", tag);
-		Log.i("debug.info", "tag:"+tag);
 		Log.i("debug.info", "sendBroadcast:scanwifi...");
 		sendBroadcast(it);
 	}
@@ -166,10 +166,14 @@ public class WifiService extends Service {
 	
 	public void processStartBrow(Intent it,String uri)
 	{
-		it.putExtra("wifiservice","processStartBrow");
+		/*it.putExtra("wifiservice","processStartBrow");
 		it.putExtra("uri", uri);
 		Log.i("debug.info", "sendBroadcast:processStartBrow...");
-		sendBroadcast(it);
+		sendBroadcast(it);*/
+		if(startBrows(Uri.parse(uri)) == true)
+		{
+			Log.i("debug.info","start brows...");
+		}
 	}
 	
 	public void processPortFail(Intent it)
@@ -208,7 +212,6 @@ public class WifiService extends Service {
         intentFilter.addAction("com.douwan.ap.mainActivity");
         registerReceiver(msgReceiver, intentFilter);
 	}
-	
 	public class MsgReceiver extends BroadcastReceiver{  
 		  
         @Override  
@@ -396,14 +399,14 @@ public class WifiService extends Service {
 		        if(m.toString().contains("<TITLE>Success</TITLE>"))
 				{
 					Log.i("debug.info","访问IOS网站返回Succeed！");
-					/*tag = "设备可以上网了,请重置!";
+					tag = "设备可以上网了,请重置!";
 					Message message = new Message();
 					message.what = CAN_NETWORK;
-					myHandler.sendMessage(message);*/
-					if(startBrows(uri) == true)
+					myHandler.sendMessage(message);
+					/*if(startBrows(uri) == true)
 		    		{
 		    			Log.i("debug.info","start brows...");
-		    		}
+		    		}*/
 					
 					return;
 				}

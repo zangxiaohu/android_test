@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.SocketTimeoutException;
@@ -133,6 +134,10 @@ public class MainActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		
+		CrashHandler crashHandler = new CrashHandler();    
+		crashHandler.init(this);  
+
+		
 		findById();
 		startBindService();
 		receiveBroadcast();
@@ -172,8 +177,8 @@ public class MainActivity extends Activity {
 		if(MainActivity.string_remain_count != null && Long.parseLong(MainActivity.string_remain_count) == 0)
 		{
 			Log.i("debug.info", "...........................");
-			unbindService(connect);
-			unregisterReceiver(msgReceiver);
+//			unbindService(connect);
+//			unregisterReceiver(msgReceiver);
 			flag = true;
 		}
 		return flag;
@@ -248,12 +253,24 @@ public class MainActivity extends Activity {
         		closeWifi(intent);
         		break;
         	case "updatelistview":
-        		updateListView();
+        		if(stop())
+        		{
+        			updateListView(false);
+        			wifiService.wifi.closeWifi();
+        			break;
+        		}
+        		updateListView(true);
         		break;
         	case "scanwifi":
         		scanWifi(intent);
         		break;
         	case "dhcpfail":
+        		if(stop())
+        		{
+        			updateListView(false);
+        			wifiService.wifi.closeWifi();
+        			break;
+        		}
         		dhcpFail();
         		sendScanWifiBroadcast();
         		break;
@@ -261,10 +278,22 @@ public class MainActivity extends Activity {
         		canNetwork(intent);
         		break;
         	case "processPortFail":
+        		if(stop())
+        		{
+        			updateListView(false);
+        			wifiService.wifi.closeWifi();
+        			break;
+        		}
         		portalFail();
         		sendScanWifiBroadcast();
         		break;
         	case "processWebBack":
+        		if(stop())
+        		{
+        			updateListView(false);
+        			wifiService.wifi.closeWifi();
+        			break;
+        		}
         		webBack(intent);
         		sendScanWifiBroadcast();
 				break;
@@ -291,15 +320,14 @@ public class MainActivity extends Activity {
 		Toast.makeText(MainActivity.this,tag, Toast.LENGTH_SHORT).show();
 	}
 	
-	public void updateListView()
+	public void updateListView(boolean flag)
 	{
-		setList(MainActivity.this,true);
+		setList(MainActivity.this,flag);
 	}
 	
 	public void scanWifi(Intent intent)
 	{
 		String tag = intent.getExtras().getString("tag");
-		Log.i("debug.info", "tag1:"+tag);
 		Toast.makeText(MainActivity.this,tag, Toast.LENGTH_SHORT).show();
 	}
 	
@@ -355,7 +383,7 @@ public class MainActivity extends Activity {
 		string_remain_count = (Long.parseLong(string_remain_count)-1)+"";
 		remain_count.setText(" £”‡≤‚ ‘¥Œ ˝: "+string_remain_count);
 		
-		Log.i("debug.info","is equal:"+it.getExtras().getString("redirect").equals("0"));
+		Log.i("debug.info","redirect :"+it.getExtras().getString("redirect").equals("0"));
 		if(it.getExtras().getString("redirect").equals("0") == false)
 		{
 			responseFail();
@@ -616,4 +644,45 @@ public class MainActivity extends Activity {
 		}
 		
 	}
+	
+	public class CrashHandler implements UncaughtExceptionHandler {
+		private Thread.UncaughtExceptionHandler mDefaultHandler;
+
+		public void init(Context ctx) {
+			mDefaultHandler = Thread.getDefaultUncaughtExceptionHandler();
+			Thread.setDefaultUncaughtExceptionHandler(this);
+		}
+
+		@Override
+		public void uncaughtException(Thread thread, Throwable ex) {
+			// TODO Auto-generated method stub
+			if (!handleException(ex) && mDefaultHandler != null) {
+
+				mDefaultHandler.uncaughtException(thread, ex);
+			}
+			
+		}
+		
+		private boolean handleException(Throwable ex) {
+			if (ex == null) {
+				return false;
+			}
+			StringBuffer sb = new StringBuffer();
+
+			Throwable e = ex.getCause() == null ? ex : ex.getCause();
+			StackTraceElement[] stacks = e.getStackTrace();
+			for (int i = 0; i < stacks.length; i++) {
+				sb.append("class: ").append(stacks[i].getClassName())
+						.append("; method: ").append(stacks[i].getMethodName())
+						.append("; line: ").append(stacks[i].getLineNumber())
+						.append(";  Exception: ").append(e.toString() + "\n");
+			}
+			Log.i("debug.info","handleException.........:" +sb.toString());
+
+			return true;
+		}
+		
+		   
+	}
+
 }

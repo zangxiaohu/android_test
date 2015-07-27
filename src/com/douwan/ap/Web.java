@@ -92,7 +92,7 @@ public class Web extends Activity {
 					num = num +1;
 					Log.i("debug.info","url:"+view.getUrl());
 					Log.i("debug.info","num = "+num);
-					if(num == 1)
+					if(num == 3)
 					{
 						long time1 = SystemClock.uptimeMillis();
 						while(true)
